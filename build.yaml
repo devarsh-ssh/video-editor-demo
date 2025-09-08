@@ -1,0 +1,20 @@
+targets:
+  $default:
+    builders:
+      injectable_generator:injectable_builder:
+        enabled: true
+        generate_for:
+          - lib/core/di/injection.dart
+      json_serializable:json_serializable:
+        enabled: true
+        options:
+          explicit_to_json: true
+          include_if_null: false
+      freezed:freezed:
+        enabled: true
+        options:
+          fallbackUnion: true
+      retrofit_generator:retrofit:
+        enabled: true
+        options:
+          auto_implement: true
