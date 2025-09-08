@@ -108,7 +108,20 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(child: Center(child: _buildPreview())),
+            Expanded(
+              child: Card(
+                elevation: 1,
+                clipBehavior: Clip.antiAlias,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Container(
+                  color: Theme.of(context).colorScheme.surface,
+                  alignment: Alignment.center,
+                  child: _buildPreview(),
+                ),
+              ),
+            ),
             const SizedBox(height: 8),
             _buildPlaybackControls(context),
             const SizedBox(height: 12),
@@ -150,25 +163,35 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
             ? controller!.value.duration.inMilliseconds.toDouble()
             : 0.0;
     final value = _playheadMs.clamp(0, maxMs.toInt()).toDouble();
-    return Row(
+    final endMs = controller?.value.duration.inMilliseconds ?? 0;
+    return Column(
       children: [
-        Expanded(
-          child: Slider(
-            value: maxMs == 0 ? 0 : value,
-            max: maxMs == 0 ? 1 : maxMs,
-            onChanged:
-                maxMs == 0
-                    ? null
-                    : (v) {
-                      final ms = v.toInt();
-                      _seekToMs(ms);
-                    },
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          _formatMs(value.toInt()),
-          style: Theme.of(context).textTheme.bodySmall,
+        Row(
+          children: [
+            Text(
+              _formatMs(value.toInt()),
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Slider(
+                value: maxMs == 0 ? 0 : value,
+                max: maxMs == 0 ? 1 : maxMs,
+                onChanged:
+                    maxMs == 0
+                        ? null
+                        : (v) {
+                          final ms = v.toInt();
+                          _seekToMs(ms);
+                        },
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _formatMs(endMs),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
         ),
       ],
     );
@@ -238,32 +261,45 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
     final canSplit =
         _findSegmentIndexAtMs(_playheadMs) != null && _canSplitAt(_playheadMs);
     final canDelete = _selectedSegmentIndex != null && _segments.length > 1;
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: canSplit ? _splitAtPlayhead : null,
-            icon: const Icon(Icons.content_cut),
-            label: const Text('Split'),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 520;
+        final children = [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: canSplit ? _splitAtPlayhead : null,
+              icon: const Icon(Icons.content_cut),
+              label: const Text('Split'),
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: canDelete ? _deleteSelected : null,
-            icon: const Icon(Icons.delete_outline),
-            label: const Text('Delete'),
+          const SizedBox(width: 12),
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: canDelete ? _deleteSelected : null,
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Delete'),
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _isExporting ? null : _startExport,
-            icon: const Icon(Icons.outbox_outlined),
-            label: const Text('Export'),
+          const SizedBox(width: 12),
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: _isExporting ? null : _startExport,
+              icon: const Icon(Icons.outbox_outlined),
+              label: const Text('Export'),
+            ),
           ),
-        ),
-      ],
+        ];
+        if (isNarrow) {
+          return Column(
+            children: [
+              Row(children: children.sublist(0, 2)),
+              const SizedBox(height: 12),
+              Row(children: children.sublist(2)),
+            ],
+          );
+        }
+        return Row(children: children);
+      },
     );
   }
 
@@ -273,18 +309,25 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
 
   Widget _buildExportBar(BuildContext context) {
     if (!_isExporting) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        LinearProgressIndicator(
-          value: _exportProgress == 0 ? null : _exportProgress,
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            LinearProgressIndicator(
+              value: _exportProgress == 0 ? null : _exportProgress,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${(_exportProgress * 100).toStringAsFixed(0)}%',
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          '${(_exportProgress * 100).toStringAsFixed(0)}%',
-          textAlign: TextAlign.center,
-        ),
-      ],
+      ),
     );
   }
 
