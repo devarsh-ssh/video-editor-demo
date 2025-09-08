@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
+import 'package:video_editor_demo/core/theme/app_colors.dart';
 
 class AppTextStyles {
   // Font Family

@@ -1,12 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:video_editor_demo/core/constants/app_strings.dart';
+import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
-
-import '../../../../core/constants/app_strings.dart';
 
 class VideoEditorPage extends StatefulWidget {
   const VideoEditorPage({super.key, this.videoPath});
@@ -75,7 +74,9 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
     _selectedSegmentIndex = null;
     // Listen for position updates
     controller.addListener(_onControllerTick);
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     setState(() {
       _isInitializing = false;
     });
@@ -83,7 +84,9 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
 
   void _onControllerTick() {
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) return;
+    if (controller == null || !controller.value.isInitialized) {
+      return;
+    }
     final pos = controller.value.position.inMilliseconds;
     if (pos != _playheadMs) {
       setState(() {
@@ -100,47 +103,45 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.videoEditor)),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Card(
-                elevation: 1,
-                clipBehavior: Clip.antiAlias,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Container(
-                  color: Theme.of(context).colorScheme.surface,
-                  alignment: Alignment.center,
-                  child: _buildPreview(),
-                ),
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text(AppStrings.videoEditor)),
+    body: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Card(
+              elevation: 1,
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Container(
+                color: Theme.of(context).colorScheme.surface,
+                alignment: Alignment.center,
+                child: _buildPreview(),
               ),
             ),
-            const SizedBox(height: 8),
-            _buildPlaybackControls(context),
+          ),
+          const SizedBox(height: 8),
+          _buildPlaybackControls(context),
+          const SizedBox(height: 12),
+          _buildScrubber(context),
+          const SizedBox(height: 12),
+          _buildTimeline(context),
+          const SizedBox(height: 12),
+          _buildActions(context),
+          const SizedBox(height: 12),
+          _buildExportBar(context),
+          if (_exportedFilePath != null) ...[
             const SizedBox(height: 12),
-            _buildScrubber(context),
-            const SizedBox(height: 12),
-            _buildTimeline(context),
-            const SizedBox(height: 12),
-            _buildActions(context),
-            const SizedBox(height: 12),
-            _buildExportBar(context),
-            if (_exportedFilePath != null) ...[
-              const SizedBox(height: 12),
-              _buildPostExportActions(context),
-            ],
+            _buildPostExportActions(context),
           ],
-        ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 
   Widget _buildPreview() {
     if (_isInitializing) {
@@ -197,65 +198,63 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
     );
   }
 
-  Widget _buildTimeline(BuildContext context) {
-    return SizedBox(
-      height: 72,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final totalWidth = constraints.maxWidth;
-          final durationMs = _controller?.value.duration.inMilliseconds ?? 1;
-          final playheadX = (_playheadMs / durationMs) * totalWidth;
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: (d) {
-              final tappedRatio =
-                  d.localPosition.dx.clamp(0, totalWidth) / totalWidth;
-              final ms = (tappedRatio * durationMs).toInt();
-              _seekToMs(ms);
-              _selectSegmentAtMs(ms);
-            },
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Theme.of(context).dividerColor),
-              ),
-              child: Stack(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (int i = 0; i < _segments.length; i++)
-                        _SegmentBar(
-                          segment: _segments[i],
-                          totalDurationMs: durationMs,
-                          isSelected: i == _selectedSegmentIndex,
-                          onTap: () {
-                            setState(() {
-                              _selectedSegmentIndex = i;
-                            });
-                          },
-                        ),
-                    ],
-                  ),
-                  // Playhead
-                  Positioned(
-                    left: playheadX.clamp(0, totalWidth - 1),
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 2,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
+  Widget _buildTimeline(BuildContext context) => SizedBox(
+    height: 72,
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final totalWidth = constraints.maxWidth;
+        final durationMs = _controller?.value.duration.inMilliseconds ?? 1;
+        final playheadX = (_playheadMs / durationMs) * totalWidth;
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (d) {
+            final tappedRatio =
+                d.localPosition.dx.clamp(0, totalWidth) / totalWidth;
+            final ms = (tappedRatio * durationMs).toInt();
+            _seekToMs(ms);
+            _selectSegmentAtMs(ms);
+          },
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Theme.of(context).dividerColor),
             ),
-          );
-        },
-      ),
-    );
-  }
+            child: Stack(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (int i = 0; i < _segments.length; i++)
+                      _SegmentBar(
+                        segment: _segments[i],
+                        totalDurationMs: durationMs,
+                        isSelected: i == _selectedSegmentIndex,
+                        onTap: () {
+                          setState(() {
+                            _selectedSegmentIndex = i;
+                          });
+                        },
+                      ),
+                  ],
+                ),
+                // Playhead
+                Positioned(
+                  left: playheadX.clamp(0, totalWidth - 1),
+                  top: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 2,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
 
   Widget _buildActions(BuildContext context) {
     final canSplit =
@@ -308,7 +307,9 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
   String? _exportedFilePath;
 
   Widget _buildExportBar(BuildContext context) {
-    if (!_isExporting) return const SizedBox.shrink();
+    if (!_isExporting) {
+      return const SizedBox.shrink();
+    }
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -339,14 +340,18 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
     });
     // Simulate export progress over ~2 seconds
     const totalTicks = 20;
-    for (int i = 1; i <= totalTicks; i++) {
+    for (var i = 1; i <= totalTicks; i++) {
       await Future<void>.delayed(const Duration(milliseconds: 100));
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _exportProgress = i / totalTicks;
       });
     }
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     // Copy original video to temp so it can be opened/shared reliably
     final tmpDir = await getTemporaryDirectory();
     final srcPath = widget.videoPath;
@@ -363,7 +368,9 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
       _isExporting = false;
       _exportedFilePath = outPath;
     });
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     // Confirmation
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -372,37 +379,39 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
     }
   }
 
-  Widget _buildPostExportActions(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: _openExported,
-            icon: const Icon(Icons.open_in_new),
-            label: const Text('Open'),
-          ),
+  Widget _buildPostExportActions(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: OutlinedButton.icon(
+          onPressed: _openExported,
+          icon: const Icon(Icons.open_in_new),
+          label: const Text('Open'),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _shareExported,
-            icon: const Icon(Icons.share),
-            label: const Text('Share'),
-          ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: ElevatedButton.icon(
+          onPressed: _shareExported,
+          icon: const Icon(Icons.share),
+          label: const Text('Share'),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
 
   Future<void> _openExported() async {
     final path = _exportedFilePath;
-    if (path == null) return;
+    if (path == null) {
+      return;
+    }
     await OpenFilex.open(path);
   }
 
   Future<void> _shareExported() async {
     final path = _exportedFilePath;
-    if (path == null) return;
+    if (path == null) {
+      return;
+    }
     final name = _fileNameFromPath(path) ?? 'exported_video';
     final mime = _guessMimeFromExtension(_fileExtensionFromPath(path));
     await Share.shareXFiles([
@@ -412,7 +421,9 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
 
   void _togglePlay() {
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) return;
+    if (controller == null || !controller.value.isInitialized) {
+      return;
+    }
     if (controller.value.isPlaying) {
       controller.pause();
     } else {
@@ -423,7 +434,9 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
 
   void _rewind5() {
     final controller = _controller;
-    if (controller == null) return;
+    if (controller == null) {
+      return;
+    }
     final curr = controller.value.position;
     final newPos = curr - const Duration(seconds: 5);
     _seekToMs(
@@ -433,7 +446,9 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
 
   void _forward5() {
     final controller = _controller;
-    if (controller == null) return;
+    if (controller == null) {
+      return;
+    }
     final curr = controller.value.position;
     final dur = controller.value.duration;
     final newPos = curr + const Duration(seconds: 5);
@@ -442,14 +457,20 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
 
   String? _fileNameFromPath(String path) {
     final idx = path.lastIndexOf('/');
-    if (idx == -1) return path;
+    if (idx == -1) {
+      return path;
+    }
     return path.substring(idx + 1);
   }
 
   String? _fileExtensionFromPath(String? path) {
-    if (path == null) return null;
+    if (path == null) {
+      return null;
+    }
     final dot = path.lastIndexOf('.');
-    if (dot == -1 || dot == path.length - 1) return null;
+    if (dot == -1 || dot == path.length - 1) {
+      return null;
+    }
     return path.substring(dot + 1).toLowerCase();
   }
 
@@ -473,16 +494,22 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
   void _seekToMs(int ms) {
     _playheadMs = ms;
     final controller = _controller;
-    if (controller == null) return;
+    if (controller == null) {
+      return;
+    }
     controller.seekTo(Duration(milliseconds: ms));
     setState(() {});
   }
 
   void _splitAtPlayhead() {
     final idx = _findSegmentIndexAtMs(_playheadMs);
-    if (idx == null) return;
+    if (idx == null) {
+      return;
+    }
     final seg = _segments[idx];
-    if (_playheadMs <= seg.startMs || _playheadMs >= seg.endMs) return;
+    if (_playheadMs <= seg.startMs || _playheadMs >= seg.endMs) {
+      return;
+    }
     final left = _Segment(startMs: seg.startMs, endMs: _playheadMs);
     final right = _Segment(startMs: _playheadMs, endMs: seg.endMs);
     setState(() {
@@ -498,7 +525,9 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
 
   void _deleteSelected() {
     final idx = _selectedSegmentIndex;
-    if (idx == null) return;
+    if (idx == null) {
+      return;
+    }
     final deleted = _segments[idx];
     setState(() {
       _segments.removeAt(idx);
@@ -527,21 +556,25 @@ class _VideoEditorPageState extends State<VideoEditorPage> {
   int? _findSegmentIndexAtMs(int ms) {
     for (int i = 0; i < _segments.length; i++) {
       final s = _segments[i];
-      if (ms >= s.startMs && ms < s.endMs) return i;
+      if (ms >= s.startMs && ms < s.endMs) {
+        return i;
+      }
     }
     return null;
   }
 
   bool _canSplitAt(int ms) {
     final idx = _findSegmentIndexAtMs(ms);
-    if (idx == null) return false;
+    if (idx == null) {
+      return false;
+    }
     final s = _segments[idx];
     return ms > s.startMs && ms < s.endMs;
   }
 
   String _formatMs(int ms) {
     final d = Duration(milliseconds: ms);
-    final two = (int n) => n.toString().padLeft(2, '0');
+    String two(int n) => n.toString().padLeft(2, '0');
     final mm = two(d.inMinutes.remainder(60));
     final ss = two(d.inSeconds.remainder(60));
     return '$mm:$ss';
