@@ -57,6 +57,7 @@ class AppStrings {
 
   // Video Editor
   static const String videoEditor = 'Video Editor';
+  static const String importVideo = 'Import';
   static const String addVideo = 'Add Video';
   static const String addImage = 'Add Image';
   static const String addAudio = 'Add Audio';

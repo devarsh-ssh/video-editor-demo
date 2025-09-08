@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_strings.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
@@ -51,11 +53,22 @@ class HomePage extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Navigate to video editor
+        onPressed: () async {
+          final picker = ImagePicker();
+          final picked = await picker.pickVideo(
+            source: ImageSource.gallery,
+            maxDuration: const Duration(minutes: 1),
+          );
+          if (picked == null) return;
+          if (!context.mounted) return;
+          final uri = Uri(
+            path: '/editor',
+            queryParameters: {'path': picked.path},
+          );
+          context.go(uri.toString());
         },
-        icon: const Icon(Icons.add),
-        label: const Text(AppStrings.createNew),
+        icon: const Icon(Icons.file_upload_outlined),
+        label: const Text(AppStrings.importVideo),
       ),
     );
   }

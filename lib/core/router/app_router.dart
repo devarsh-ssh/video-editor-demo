@@ -4,6 +4,7 @@ import 'package:video_editor_demo/features/home/presentation/pages/home_page.dar
 import 'package:video_editor_demo/features/profile/presentation/pages/profile_page.dart';
 import 'package:video_editor_demo/features/settings/presentation/pages/settings_page.dart';
 import 'package:video_editor_demo/features/splash/presentation/pages/splash_page.dart';
+import 'package:video_editor_demo/features/video_editor/presentation/pages/video_editor_page.dart';
 
 // ignore: avoid_classes_with_only_static_members
 class AppRouter {
@@ -11,6 +12,7 @@ class AppRouter {
   static const String home = '/home';
   static const String profile = '/profile';
   static const String settings = '/settings';
+  static const String editor = '/editor';
 
   static final GoRouter router = GoRouter(
     initialLocation: splash,
@@ -34,6 +36,15 @@ class AppRouter {
         path: settings,
         name: 'settings',
         builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(
+        path: editor,
+        name: 'editor',
+        builder: (context, state) {
+          final uri = state.uri;
+          final sourcePath = uri.queryParameters['path'];
+          return VideoEditorPage(videoPath: sourcePath);
+        },
       ),
     ],
     errorBuilder:
