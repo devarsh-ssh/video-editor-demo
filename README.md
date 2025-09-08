@@ -24,6 +24,38 @@ This project follows **Clean Architecture** principles with clear separation of 
 - **Performance Monitoring**: Firebase Analytics and Crashlytics integration
 - **Security**: Encrypted storage and secure API communication
 
+## 🎬 Video Editing Demo Walkthrough (What we implemented)
+
+This repo now includes a minimal, working video-editing demo that showcases an end-to-end flow:
+
+- Import a short video from the gallery
+- Preview playback with play/pause and skip ±5s controls
+- Scrub/seek quickly without playing through
+- Split the timeline at the playhead and delete a segment
+- Export a result (demo copies the source clip) with a visible progress bar
+- Open the exported file in a system viewer or share to apps (WhatsApp, Email, etc.)
+
+Primary files touched:
+- `lib/features/home/presentation/pages/home_page.dart`: Import (FAB) → pick video and navigate to editor
+- `lib/core/router/app_router.dart`: Added `/editor` route
+- `lib/features/video_editor/presentation/pages/video_editor_page.dart`: Editor UI, timeline, split/delete, export, open/share
+- `ios/Runner/Info.plist`: Photo library usage descriptions
+- `pubspec.yaml`: Added `image_picker`, `video_player`, `permission_handler`, `path_provider`, `share_plus`, and `open_filex`
+
+## ▶️ How to try the demo flow
+
+1) Splash/Home → tap Import
+2) Pick a short video (≤ 1 minute recommended)
+3) Editor opens with the selected video
+4) Move the playhead using the slider or tapping the timeline
+5) Tap Split → select a segment → Delete to remove a portion
+6) Tap Export → watch the progress → SnackBar confirms
+7) Tap Open (system viewer) or Share (WhatsApp/Email/etc.)
+
+Notes:
+- Export writes a copy of the selected video to a temporary file with the correct extension for compatibility when opening/sharing.
+- Timeline is a simple visual placeholder; split/delete are functional within the demo.
+
 ## 📱 Screenshots
 
 *Coming soon...*
@@ -52,6 +84,14 @@ This project follows **Clean Architecture** principles with clear separation of 
 - `freezed` + `json_annotation` - Code generation
 - `equatable` - Value equality
 - `dartz` - Functional programming
+
+### Media/Device-specific
+- `image_picker` - Pick video from gallery
+- `video_player` - Video playback
+- `permission_handler` - Runtime permissions (Android)
+- `path_provider` - Temporary directory for export
+- `share_plus` - Native share sheet
+- `open_filex` - Open exported file in system apps
 
 ### UI/UX Dependencies
 - `flutter_svg` - SVG support
@@ -234,3 +274,63 @@ For support, email support@videoeditor.com or join our Discord community.
 ---
 
 **Built with ❤️ using Flutter**
+
+## 📲 Run on a real device (Android & iOS)
+
+Follow these steps to run and validate the demo on physical hardware.
+
+### Android (Device)
+
+1. Enable Developer Options and USB debugging on your Android phone.
+2. Connect via USB (or use wireless ADB) and verify the device:
+   ```bash
+   flutter devices
+   ```
+3. Ensure required Android permissions are declared (already included):
+   - Image picking and storage access via `permission_handler`
+4. Run the app to your device:
+   ```bash
+   flutter run -d <device_id>
+   ```
+5. Test the flow:
+   - Tap Import → choose a short video from Gallery
+   - Use Play/Pause and ±5s skip
+   - Split at playhead and Delete a segment
+   - Export → watch progress → confirmation SnackBar
+   - Open or Share the exported file
+
+Troubleshooting (Android):
+- If pick/share fails, confirm the selected video is local and not DRM-protected.
+- On Android 13+, runtime Media permissions may be required. If denied, enable from Settings → Apps → Permissions.
+
+### iOS (iPhone)
+
+1. Prerequisites: Xcode, CocoaPods, Apple Developer setup for device deployment.
+2. Install pods:
+   ```bash
+   cd ios && pod install && cd ..
+   ```
+3. Open the iOS workspace and set a valid signing team:
+   ```bash
+   open ios/Runner.xcworkspace
+   ```
+   - Select the `Runner` target → Signing & Capabilities → Team = your Apple ID team.
+4. Ensure photo permissions are present (already configured in `ios/Runner/Info.plist`):
+   - `NSPhotoLibraryUsageDescription`
+   - `NSPhotoLibraryAddUsageDescription`
+5. Plug in your iPhone and trust the computer if prompted. Then run:
+   ```bash
+   flutter run -d <device_id>
+   ```
+6. Test the flow as on Android.
+
+Troubleshooting (iOS):
+- Run on a physical device for video pick/share; the Simulator has limited media libraries.
+- If sharing doesn’t show apps, ensure target apps (e.g., WhatsApp, Mail) are installed on the device.
+- If build errors occur after dependency changes, do a clean build:
+  ```bash
+  flutter clean
+  cd ios && pod install && cd ..
+  flutter pub get
+  flutter run
+  ```
